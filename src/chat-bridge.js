@@ -34,7 +34,7 @@ const MAX_CHAT_FEED = 200;          // in-memory ring for /log
 const POLL_MAX_OPTIONS = 9;
 
 // Commands viewers may run. Anything not here is silently dropped.
-const COMMAND_ALLOWLIST = new Set(['status', 'uptime', 'repo', 'pr', 'vote']);
+const COMMAND_ALLOWLIST = new Set(['status', 'uptime', 'repo', 'pr', 'vote', 'ping', 'help']);
 
 function json(res, code, obj) {
     const body = JSON.stringify(obj);
@@ -59,6 +59,8 @@ function createBridge({
         poll: null                       // {question, options, votes:Map, endsAt, closed}
     };
     let lastReplyAt = 0;
+    let lastMentionReplyAt = 0;
+    const MENTION_COOLDOWN_MS = 30_000;   // global gap between auto mention replies
     let saySeq = 0;
     let lastSayAt = 0;
     const sayQueue = [];
@@ -103,6 +105,8 @@ function createBridge({
             case 'uptime': return `session up ${Math.round((Date.now() - startedAt) / 60000)} min`;
             case 'repo': return 'github.com/CommunityPokeOrg/kwin-js-desktop';
             case 'pr': return 'latest: CommunityPokeOrg/kwin-js-desktop#1';
+            case 'ping': return 'pong — reading chat live';
+            case 'help': return 'commands: !status !uptime !repo !pr !ping — or @ me';
             default: return null;
         }
     }
@@ -186,7 +190,11 @@ function createBridge({
         broadcast('chat', { user, text: verdict.text });
         // Mentions of the bot get a canned status answer — already past
         // moderation, so blocked/muted/spam senders never reach this.
-        if (/@?pokede\b/i.test(verdict.text)) {
+        // Viewers address "Devin" or "pokede"; a global cooldown keeps a
+        // mention flood from looping replies.
+        if (/@?(pokede|devin)\b/i.test(verdict.text)
+            && Date.now() - lastMentionReplyAt > MENTION_COOLDOWN_MS) {
+            lastMentionReplyAt = Date.now();
             reply(user, `hi ${user} — ${state.statusText}`);
         }
     }
