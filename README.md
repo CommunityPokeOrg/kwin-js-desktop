@@ -7,10 +7,14 @@ API** that apps and KDE-level automation use to observe and drive the desktop.
 - `kwin/bridge` — KWin script (KWin 5 + 6) publishing window events to D-Bus
 - `src/registry*` — canonical window state as `org.communitypoke.desktop.Registry`
 - `src/jsapi.js` — `desktop` API injected into `node:vm` scripts
-- `bin/pokede.js` — CLI: `registry`, `windows`, `run`, `bridge-load`, `status`
-- `docs/` — [architecture](docs/architecture.md) and
+- `src/irc.js` + `src/chat-bridge.js` + `src/moderation.js` — localhost
+  HTTP+SSE bridge between Twitch chat and OBS overlays (moderated, rate-limited)
+- `obs/overlay/` — browser-source overlay (chat feed, Devin bubbles, polls, toasts)
+- `bin/pokede.js` — CLI: `registry`, `windows`, `run`, `bridge-load`,
+  `chat-bridge`, `say`, `notify`, `poll`, `status`
+- `docs/` — [architecture](docs/architecture.md),
   [platform constraints](docs/platform-constraints.md) (KWin 5/6, X11/Wayland,
-  QuickShell/layer-shell)
+  QuickShell/layer-shell), [OBS integration](docs/obs-integration.md)
 - `examples/` — `watch-windows.js`, `tile-new-windows.js`
 
 ## Quickstart
@@ -18,7 +22,8 @@ API** that apps and KDE-level automation use to observe and drive the desktop.
 ```sh
 source scripts/session-env.sh     # get DBUS_SESSION_BUS_ADDRESS on KDE
 npm install
-npm test                          # store unit tests + private-bus integration
+npm test                          # 20 tests: store, D-Bus round-trip, IRC,
+                                  # moderation, bridge SSE/commands/poll/say
 
 pokede registry &                 # or: node bin/pokede.js registry
 pokede bridge-load                # load bridge into the running KWin

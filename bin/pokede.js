@@ -20,6 +20,12 @@ usage: pokede <command> [args]
   bridge-unload            unload the bridge from KWin
   bridge-status            is the bridge loaded in KWin
   status                   session health: bus, registry, KWin, bridge
+  chat-bridge              run the OBS chat bridge (HTTP+SSE on 127.0.0.1:8765)
+  notify <title> [text]    push a toast to all overlays
+  say <text>               show a Devin speech bubble on overlays (queued)
+  reply <user> <text>      answer a chatter on overlays + speech banner
+  set-status <text>        set the overlay status line
+  poll <q> :: <a,b,..> [s] start a chat poll (options comma-sep, seconds opt)
 `);
 }
 
@@ -88,6 +94,47 @@ const cmd = process.argv[2];
             const s = await kwinScripting();
             const loaded = await s.isScriptLoaded(BRIDGE_PLUGIN);
             console.log(loaded ? 'loaded' : 'not loaded');
+            break;
+        }
+        case 'chat-bridge': {
+            const { createBridge } = require('../src/chat-bridge');
+            const bridge = createBridge({ port: parseInt(process.env.POKEDE_BRIDGE_PORT || '8765', 10) });
+            const p = await bridge.listen();
+            console.log(`chat-bridge on http://127.0.0.1:${p}/overlay`);
+            break;
+        }
+        case 'notify':
+        case 'set-status':
+        case 'say':
+        case 'reply':
+        case 'poll': {
+            const base = `http://127.0.0.1:${process.env.POKEDE_BRIDGE_PORT || 8765}`;
+            const headers = { 'content-type': 'application/json' };
+            if (process.env.POKEDE_BRIDGE_TOKEN) headers.authorization = `Bearer ${process.env.POKEDE_BRIDGE_TOKEN}`;
+            if (cmd === 'notify') {
+                const r = await fetch(`${base}/notify`, { method: 'POST', headers, body: JSON.stringify({ title: process.argv[3] || '', text: process.argv[4] || '' }) });
+                console.log(await r.text());
+            } else if (cmd === 'say') {
+                const r = await fetch(`${base}/say`, { method: 'POST', headers, body: JSON.stringify({ text: process.argv.slice(3).join(' ') }) });
+                if (!r.ok) console.error('say failed:', await r.text());
+            } else if (cmd === 'reply') {
+                const user = process.argv[3];
+                const text = process.argv.slice(4).join(' ');
+                if (!user || !text) { console.error('usage: pokede reply <user> <text>'); process.exit(2); }
+                const r = await fetch(`${base}/reply`, { method: 'POST', headers, body: JSON.stringify({ user, text }) });
+                console.log(await r.text());
+            } else if (cmd === 'set-status') {
+                const r = await fetch(`${base}/status`, { method: 'POST', headers, body: JSON.stringify({ text: process.argv.slice(3).join(' ') }) });
+                console.log(await r.text());
+            } else {
+                const [q, rest] = process.argv.slice(3).join(' ').split('::').map((s) => s.trim());
+                if (!q || !rest) { console.error('usage: pokede poll <question> :: <opt1,opt2> [seconds]'); process.exit(2); }
+                const parts = rest.split(' ');
+                const secs = /^\d+$/.test(parts[parts.length - 1]) ? parseInt(parts.pop(), 10) : undefined;
+                const options = parts.join(' ').split(',').map((s) => s.trim()).filter(Boolean);
+                const r = await fetch(`${base}/poll`, { method: 'POST', headers, body: JSON.stringify({ question: q, options, seconds: secs }) });
+                console.log(await r.text());
+            }
             break;
         }
         case 'status': {
