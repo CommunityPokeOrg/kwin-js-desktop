@@ -1,0 +1,23 @@
+{
+  "name": "pokede",
+  "version": "0.1.0",
+  "description": "Desktop environment with KWin window syncing and a JavaScript scripting API for apps and KDE",
+  "type": "commonjs",
+  "license": "MIT",
+  "bin": {
+    "pokede": "bin/pokede.js"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "registry": "node bin/pokede.js registry",
+    "windows": "node bin/pokede.js windows",
+    "status": "node bin/pokede.js status"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "dbus-next": "^0.10.2",
+    "usocket": "^1.1.0"
+  }
+}

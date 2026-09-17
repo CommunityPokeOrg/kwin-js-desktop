@@ -1,0 +1,14 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Id": "pokede-bridge",
+        "Name": "PokeDE Window Bridge",
+        "Description": "Publishes KWin window lifecycle and state events to the PokeDE session D-Bus registry",
+        "Icon": "preferences-system-windows",
+        "Version": "0.1.0",
+        "License": "MIT",
+        "EnabledByDefault": true
+    },
+    "X-Plasma-API-Minimum-Version": "5.0",
+    "X-KDE-Ordering": 60
+}

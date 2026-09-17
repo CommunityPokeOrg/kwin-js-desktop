@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PokeDE Overlay</title>
+<link rel="stylesheet" href="/overlay/overlay.css">
+</head>
+<body>
+<div id="root">
+  <header id="status"><span id="status-text">connecting…</span></header>
+
+  <section id="poll" class="hidden">
+    <div id="poll-question"></div>
+    <ul id="poll-options"></ul>
+    <div id="poll-hint">chat: !vote &lt;n&gt; or !&lt;n&gt;</div>
+  </section>
+
+  <main id="feed"></main>
+
+  <div id="speech" class="hidden"><span id="speech-who"></span><span id="speech-text"></span></div>
+
+  <div id="toasts"></div>
+</div>
+<script src="/overlay/overlay.js"></script>
+</body>
+</html>
